@@ -1,0 +1,389 @@
+// SHAJARA — MVP schema. See docs/architecture/DATABASE.md for the analysis behind it.
+// Raw-SQL migration additions (Prisma can't express them): CHECK (parentId <> childId),
+// CHECK (personAId < personBId), generated tsvector column + GIN index on Person for full-text search.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlatformRole { USER MODERATOR ADMIN }
+enum UserStatus { ACTIVE SUSPENDED DELETED }
+enum FamilyRole { OWNER ADMIN EDITOR CONTRIBUTOR VIEWER }
+enum Visibility { PRIVATE SELECTED FAMILY PUBLIC }
+enum Gender { MALE FEMALE OTHER UNKNOWN }
+enum ParentChildType { BIOLOGICAL ADOPTED STEP FOSTER }
+enum MarriageStatus { MARRIED DIVORCED WIDOWED }
+enum EventType { BIRTH MARRIAGE DEATH GRADUATION MIGRATION CAREER MILITARY ACHIEVEMENT OTHER }
+enum MediaType { IMAGE VIDEO AUDIO DOCUMENT }
+enum MediaStatus { PENDING READY REJECTED }
+enum InvitationStatus { PENDING ACCEPTED REVOKED EXPIRED }
+enum ReportType { INCORRECT_INFO PRIVACY_VIOLATION FAKE_PROFILE ABUSE SPAM OTHER }
+enum ReportStatus { OPEN IN_REVIEW RESOLVED REJECTED }
+enum NotificationType { INVITATION RELATIONSHIP_REQUEST POSSIBLE_CONNECTION COMMENT PERMISSION_CHANGE SYSTEM }
+enum EmailTokenType { VERIFY_EMAIL RESET_PASSWORD }
+// Future-ready (claim/source/evidence); MVP stores the default only.
+enum VerificationStatus { UNVERIFIED VERIFIED DISPUTED }
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  emailVerified DateTime?
+  passwordHash  String?      // null for OAuth-only accounts
+  role          PlatformRole @default(USER)
+  status        UserStatus   @default(ACTIVE)
+  locale        String       @default("uz")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  profile       Profile?
+  oauthAccounts OAuthAccount[]
+  sessions      Session[]
+  emailTokens   EmailToken[]
+  memberships   FamilyMember[]
+  persons       Person[]
+  stories       Story[]
+  media         Media[]
+  invitationsSent Invitation[] @relation("InvitedBy")
+  reports       Report[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  contentAccess ContentAccess[]
+}
+
+model Profile {
+  userId     String   @id
+  firstName  String
+  lastName   String
+  avatarKey  String?
+  birthDate  String?  // partial ISO date
+  birthPlace String?
+  bio        String?
+  occupation String?
+  education  String?
+  location   String?
+  languages  String[]
+  // Per-field privacy; sensitive fields default to PRIVATE.
+  birthDateVisibility Visibility @default(PRIVATE)
+  locationVisibility  Visibility @default(PRIVATE)
+  profileVisibility   Visibility @default(FAMILY)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OAuthAccount {
+  id         String @id @default(cuid())
+  userId     String
+  provider   String // "google" | later "apple", "telegram"
+  providerId String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
+// Refresh-token sessions. Only a hash of the token is stored. "Logout everywhere" = delete all rows of a user.
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  tokenHash   String   @unique
+  userAgent   String?
+  ip          String?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailToken {
+  id        String         @id @default(cuid())
+  userId    String
+  type      EmailTokenType
+  tokenHash String         @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+model Family {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  visibility  Visibility @default(PRIVATE)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  members     FamilyMember[]
+  persons     Person[]
+  parentChild ParentChild[]
+  marriages   Marriage[]
+  events      Event[]
+  stories     Story[]
+  media       Media[]
+  invitations Invitation[]
+}
+
+// Ownership rule: removing a member NEVER deletes genealogy data; Person belongs to Family, not to a User.
+model FamilyMember {
+  familyId  String
+  userId    String
+  role      FamilyRole @default(VIEWER)
+  joinedAt  DateTime   @default(now())
+  family    Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([familyId, userId])
+  @@index([userId])
+}
+
+model Person {
+  id           String     @id @default(cuid())
+  familyId     String
+  userId       String?    // set when this Person is a real account owner
+  firstName    String
+  lastName     String?
+  maidenName   String?
+  gender       Gender     @default(UNKNOWN)
+  birthDate    String?    // partial ISO ("1950", "1950-03", "1950-03-17"); genealogy often lacks exact dates
+  birthYear    Int?       // derived, for filtering/sorting/search
+  deathDate    String?
+  isLiving     Boolean    @default(true)
+  birthPlaceId String?
+  bio          String?
+  avatarMediaId String?
+  // Living people are PRIVATE by default (privacy-by-design).
+  visibility   Visibility @default(PRIVATE)
+  verification VerificationStatus @default(UNVERIFIED)
+  createdById  String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  family       Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  birthPlace   Location?  @relation(fields: [birthPlaceId], references: [id])
+  parentLinks  ParentChild[] @relation("ParentSide")
+  childLinks   ParentChild[] @relation("ChildSide")
+  marriagesA   Marriage[]    @relation("SpouseA")
+  marriagesB   Marriage[]    @relation("SpouseB")
+  events       Event[]
+  storyLinks   StoryPerson[]
+  mediaLinks   MediaPerson[]
+
+  @@unique([familyId, userId])
+  @@index([familyId])
+  @@index([familyId, lastName, firstName])
+  @@index([birthYear])
+  @@index([userId])
+}
+
+model ParentChild {
+  id        String          @id @default(cuid())
+  familyId  String
+  parentId  String
+  childId   String
+  type      ParentChildType @default(BIOLOGICAL)
+  createdAt DateTime        @default(now())
+  family    Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  parent    Person          @relation("ParentSide", fields: [parentId], references: [id], onDelete: Cascade)
+  child     Person          @relation("ChildSide", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId])
+  @@index([childId])
+  @@index([familyId])
+}
+
+// Stored with personAId < personBId (enforced in service + CHECK) so a pair can only exist once.
+model Marriage {
+  id        String         @id @default(cuid())
+  familyId  String
+  personAId String
+  personBId String
+  status    MarriageStatus @default(MARRIED)
+  startDate String?
+  endDate   String?
+  placeId   String?
+  createdAt DateTime       @default(now())
+  family    Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  personA   Person         @relation("SpouseA", fields: [personAId], references: [id], onDelete: Cascade)
+  personB   Person         @relation("SpouseB", fields: [personBId], references: [id], onDelete: Cascade)
+
+  @@unique([personAId, personBId])
+  @@index([personBId])
+  @@index([familyId])
+}
+
+// Approximate place only. Exact private addresses are never stored here.
+model Location {
+  id        String  @id @default(cuid())
+  name      String
+  region    String?
+  country   String?
+  lat       Float?
+  lng       Float?
+  persons   Person[]
+  events    Event[]
+
+  @@index([country, name])
+}
+
+model Event {
+  id         String     @id @default(cuid())
+  familyId   String
+  personId   String
+  type       EventType
+  title      String?
+  date       String?    // partial ISO
+  year       Int?
+  locationId String?
+  description String?
+  visibility Visibility @default(FAMILY)
+  createdAt  DateTime   @default(now())
+  family     Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  person     Person     @relation(fields: [personId], references: [id], onDelete: Cascade)
+  location   Location?  @relation(fields: [locationId], references: [id])
+
+  @@index([personId, year])
+  @@index([familyId, year])
+}
+
+model Story {
+  id         String     @id @default(cuid())
+  familyId   String
+  authorId   String
+  title      String
+  body       String
+  date       String?
+  visibility Visibility @default(FAMILY)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+  family     Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  author     User       @relation(fields: [authorId], references: [id])
+  people     StoryPerson[]
+
+  @@index([familyId, createdAt])
+}
+
+model StoryPerson {
+  storyId  String
+  personId String
+  story    Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([storyId, personId])
+  @@index([personId])
+}
+
+model Media {
+  id         String      @id @default(cuid())
+  familyId   String
+  uploaderId String
+  type       MediaType
+  status     MediaStatus @default(PENDING)
+  storageKey String      @unique
+  mimeType   String
+  sizeBytes  Int
+  caption    String?
+  visibility Visibility  @default(FAMILY)
+  createdAt  DateTime    @default(now())
+  deletedAt  DateTime?
+  family     Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  uploader   User        @relation(fields: [uploaderId], references: [id])
+  people     MediaPerson[]
+
+  @@index([familyId, createdAt])
+}
+
+model MediaPerson {
+  mediaId  String
+  personId String
+  media    Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([mediaId, personId])
+  @@index([personId])
+}
+
+model Invitation {
+  id          String           @id @default(cuid())
+  familyId    String
+  invitedById String
+  email       String?
+  tokenHash   String           @unique
+  role        FamilyRole       @default(VIEWER)
+  status      InvitationStatus @default(PENDING)
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
+  family      Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  invitedBy   User             @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  @@index([familyId, status])
+}
+
+// Backs Visibility.SELECTED: explicit list of members who may see one item.
+model ContentAccess {
+  id           String @id @default(cuid())
+  resourceType String // "person" | "story" | "media" | "event"
+  resourceId   String
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceType, resourceId, userId])
+  @@index([userId])
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  reporterId   String
+  targetType   String
+  targetId     String
+  type         ReportType
+  details      String?
+  status       ReportStatus @default(OPEN)
+  resolution   String?
+  createdAt    DateTime     @default(now())
+  resolvedAt   DateTime?
+  reporter     User         @relation(fields: [reporterId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+// Append-only. Never update or delete rows; no sensitive content in `meta`.
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String   // e.g. "person.created", "relationship.created", "permission.changed"
+  entity    String
+  entityId  String?
+  familyId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([familyId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([entity, entityId])
+}

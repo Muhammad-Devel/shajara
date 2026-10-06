@@ -1,0 +1,69 @@
+/* SHAJARA design tokens. Direction: heritage archive — warm parchment, deep ink-green, brass accent.
+   Serif display (family-book feel) + clean sans for UI. Fonts are loaded by the app; fallbacks included. */
+:root {
+  /* Color — light */
+  --color-bg: #f7f2e8;            /* parchment */
+  --color-surface: #fffdf8;
+  --color-surface-2: #efe8d8;
+  --color-ink: #1f2a24;           /* body text, AA on bg */
+  --color-ink-muted: #56625a;
+  --color-border: #d9cfba;
+  --color-primary: #1f4d3a;       /* deep forest */
+  --color-primary-contrast: #fffdf8;
+  --color-accent: #a8782a;        /* brass */
+  --color-danger: #a33a2c;
+  --color-line-parent: #1f4d3a;   /* tree: solid */
+  --color-line-marriage: #a8782a; /* tree: dashed, different style */
+  --color-focus: #2a6fb0;
+
+  /* Typography */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem;
+  --text-lg: 1.25rem; --text-xl: 1.75rem; --text-2xl: 2.5rem; --text-hero: clamp(2.25rem, 6vw, 4.5rem);
+  --leading-tight: 1.15; --leading-body: 1.6;
+
+  /* Spacing (4px scale) */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+
+  /* Radius, shadow, motion, breakpoints (reference values; use in CSS/TS config) */
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 20px; --radius-full: 999px;
+  --shadow-1: 0 1px 2px rgb(31 42 36 / 8%);
+  --shadow-2: 0 8px 24px rgb(31 42 36 / 12%);
+  --motion-fast: 120ms; --motion-base: 200ms; --motion-slow: 320ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #121915;
+  --color-surface: #19231e;
+  --color-surface-2: #223029;
+  --color-ink: #efe9da;
+  --color-ink-muted: #a9b4ab;
+  --color-border: #33443a;
+  --color-primary: #6fbf98;
+  --color-primary-contrast: #0f1612;
+  --color-accent: #d9a84e;
+  --color-danger: #e0715f;
+  --color-line-parent: #6fbf98;
+  --color-line-marriage: #d9a84e;
+  --color-focus: #7db7ee;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-2: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #121915; --color-surface: #19231e; --color-surface-2: #223029;
+    --color-ink: #efe9da; --color-ink-muted: #a9b4ab; --color-border: #33443a;
+    --color-primary: #6fbf98; --color-primary-contrast: #0f1612; --color-accent: #d9a84e;
+    --color-danger: #e0715f; --color-line-parent: #6fbf98; --color-line-marriage: #d9a84e;
+    --color-focus: #7db7ee;
+  }
+}
+
+:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

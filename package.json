@@ -1,0 +1,16 @@
+{
+  "name": "shajara",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22.18", "npm": ">=10" },
+  "scripts": {
+    "dev": "npm run dev -w @shajara/web",
+    "build": "npm run build -w @shajara/web",
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "npm run generate -w @shajara/database",
+    "db:migrate": "npm run migrate -w @shajara/database",
+    "db:validate": "npm run validate -w @shajara/database"
+  }
+}
