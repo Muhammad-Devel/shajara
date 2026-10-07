@@ -3,7 +3,8 @@
 // CHECK (personAId < personBId), generated tsvector column + GIN index on Person for full-text search.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"] // rhel = Vercel/AWS Lambda runtime
 }
 
 datasource db {
@@ -386,4 +387,13 @@ model AuditLog {
   @@index([familyId, createdAt])
   @@index([actorId, createdAt])
   @@index([entity, entityId])
+}
+
+// Fixed-window rate limiter that works on serverless (no in-memory state). Updated with one atomic upsert.
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
 }
