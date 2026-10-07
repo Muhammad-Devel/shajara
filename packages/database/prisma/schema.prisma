@@ -12,6 +12,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PlatformRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum FamilyRole {
+  OWNER
+  ADMIN
+  EDITOR
+  CONTRIBUTOR
+  VIEWER
+}
+
+enum Visibility {
+  PRIVATE
+  SELECTED
+  FAMILY
+  PUBLIC
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum ParentChildType {
+  BIOLOGICAL
+  ADOPTED
+  STEP
+  FOSTER
+}
+
+enum MarriageStatus {
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum EventType {
+  BIRTH
+  MARRIAGE
+  DEATH
+  GRADUATION
+  MIGRATION
+  CAREER
+  MILITARY
+  ACHIEVEMENT
+  OTHER
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum MediaStatus {
+  PENDING
+  READY
+  REJECTED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum ReportType {
+  INCORRECT_INFO
+  PRIVACY_VIOLATION
+  FAKE_PROFILE
+  ABUSE
+  SPAM
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum NotificationType {
+  INVITATION
+  RELATIONSHIP_REQUEST
+  POSSIBLE_CONNECTION
+  COMMENT
+  PERMISSION_CHANGE
+  SYSTEM
+}
+
+enum EmailTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+// Future-ready (claim/source/evidence); MVP stores the default only.
+enum VerificationStatus {
+  UNVERIFIED
+  VERIFIED
+  DISPUTED
+}
+
+/*
 enum PlatformRole { USER MODERATOR ADMIN }
 enum UserStatus { ACTIVE SUSPENDED DELETED }
 enum FamilyRole { OWNER ADMIN EDITOR CONTRIBUTOR VIEWER }
@@ -29,6 +146,7 @@ enum NotificationType { INVITATION RELATIONSHIP_REQUEST POSSIBLE_CONNECTION COMM
 enum EmailTokenType { VERIFY_EMAIL RESET_PASSWORD }
 // Future-ready (claim/source/evidence); MVP stores the default only.
 enum VerificationStatus { UNVERIFIED VERIFIED DISPUTED }
+*/
 
 model User {
   id            String       @id @default(cuid())
