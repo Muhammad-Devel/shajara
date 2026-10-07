@@ -12,6 +12,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// after edited
 enum PlatformRole {
   USER
   MODERATOR
