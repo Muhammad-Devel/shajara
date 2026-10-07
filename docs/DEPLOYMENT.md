@@ -7,3 +7,14 @@
 5. Verify: `/`, `/api/v1/health`, `/api/v1/ready`, `/robots.txt`, `/sitemap.xml`.
 
 Never commit `.env*` files (except `.env.example`).
+
+## Phase 4a — database and auth (required before auth works)
+1. Create a managed PostgreSQL (Neon / Supabase / Vercel Postgres) and copy its connection string.
+2. Create the first migration locally (once), commit the generated `packages/database/prisma/migrations/`:
+   `DATABASE_URL="<url>" npx prisma migrate dev --name init --schema packages/database/prisma/schema.prisma`
+3. Apply it to the production DB: `DATABASE_URL="<prod url>" npm run deploy -w @shajara/database`
+4. Vercel env vars (Production + Preview): `DATABASE_URL`, `AUTH_SECRET` (>= 32 random chars: `openssl rand -base64 48`), `NEXT_PUBLIC_SITE_URL`.
+5. Deploy from the `develop` branch first (Vercel preview), verify, then merge to `main`.
+6. Check: register → dashboard → logout → login; `/api/v1/me` returns 401 when logged out.
+
+Known limit: no email provider yet, so verification and password-reset emails are NOT delivered in production (Phase 4b).
