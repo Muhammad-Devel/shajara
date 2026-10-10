@@ -24,3 +24,9 @@ Client (Web/PWA, later Expo)
 - Map/Location stores approximate places only.
 - Audit log is append-only and contains no sensitive content.
 - GDPR/data-protection specifics: *This is a product/legal decision requiring jurisdiction-specific review.*
+
+## ADR update — Tree rendering (Phase 7)
+Decision changed from *React Flow + elkjs/dagre* to a **custom pure layout engine (`packages/genealogy/src/layout.ts`) + SVG renderer**.
+Why: spouse units on one row, multiple parents and marriage links are not handled well by generic graph layouts; the engine is pure TypeScript and was benchmarked here (10 / 100 / 1 000 / 10 000 people: 0 / 1 / 19 / 305 ms, zero card overlaps); no new runtime dependency.
+Rendering: pan, wheel/pinch zoom, search, collapse/expand branches, fullscreen, keyboard (+ − 0 arrows, Tab to cards), viewport virtualization above 250 cards, level-of-detail when zoomed far out.
+Known limits: a person with parents in two different units is drawn under the first (the other link is a longer line); a person with 3+ spouses is shown as a chain; SVG with 10 000 cards is virtualized but not yet benchmarked in a real browser.

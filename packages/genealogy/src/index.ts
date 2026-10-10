@@ -9,3 +9,8 @@ export {
   type FamilyInput, type FieldErrors, type Gender, type MarriageInput, type MarriageStatus,
   type ParentChildType, type ParsedInput, type PersonInput, type PersonVisibility,
 } from "./input.ts";
+export {
+  LAYOUT_DEFAULTS, computeHidden, computeLayout,
+  type Layout, type LayoutEdge, type LayoutMarriage, type LayoutNode, type LayoutOptions, type LayoutPerson, type MarriageLink, type ParentLink,
+} from "./layout.ts";
+export { relationshipLabelUz, type LabelPerson } from "./labels.ts";

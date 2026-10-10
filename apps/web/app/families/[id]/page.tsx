@@ -36,7 +36,10 @@ export default async function FamilyPage({ params }: { params: Promise<{ id: str
     <main className="container page">
       <header className="site-header">
         <Link href="/dashboard" className="logo">SHAJARA</Link>
-        <Link href="/dashboard" className="btn btn-secondary">Orqaga</Link>
+        <nav className="nav">
+          <Link href={`/families/${id}/tree`} className="btn btn-primary">Daraxtni ochish</Link>
+          <Link href="/dashboard" className="btn btn-secondary">Orqaga</Link>
+        </nav>
       </header>
 
       <h1>{member.family.name}</h1>
