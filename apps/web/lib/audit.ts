@@ -6,6 +6,7 @@ export async function audit(entry: {
   action: string;
   entity: string;
   entityId?: string | null;
+  familyId?: string | null;
   meta?: Prisma.InputJsonValue;
 }): Promise<void> {
   try {
@@ -15,6 +16,7 @@ export async function audit(entry: {
         action: entry.action,
         entity: entry.entity,
         entityId: entry.entityId ?? null,
+        familyId: entry.familyId ?? null,
         meta: entry.meta ?? Prisma.JsonNull,
       },
     });

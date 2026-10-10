@@ -12,7 +12,7 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // Workspace packages are shipped as TypeScript source.
-  transpilePackages: ["@shajara/auth", "@shajara/database"],
+  transpilePackages: ["@shajara/auth", "@shajara/database", "@shajara/genealogy", "@shajara/access"],
   // Monorepo: trace server files (incl. the Prisma engine) from the repository root.
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
   async headers() {

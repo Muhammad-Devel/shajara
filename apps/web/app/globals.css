@@ -85,3 +85,17 @@ a { color: inherit; }
 .auth-footer { color: var(--color-ink-muted); margin: 0; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 .notice { padding: var(--space-3); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); }
+
+/* ---- family ---- */
+.page { padding-bottom: var(--space-16); }
+.page > h1 { margin-block: var(--space-4); }
+.section { margin-block: var(--space-6); }
+.section h2 { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg); }
+.muted { color: var(--color-ink-muted); }
+.badge { display: inline-block; margin-left: var(--space-2); padding: 0 var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: var(--text-xs); color: var(--color-ink-muted); }
+.grid2 { display: grid; gap: var(--space-4); }
+@media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+.field select { min-height: 44px; padding: 0 var(--space-3); font: inherit; color: var(--color-ink); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.btn-small { min-height: 36px; padding: 0 var(--space-3); color: var(--color-danger); }

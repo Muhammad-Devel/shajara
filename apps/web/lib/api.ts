@@ -25,10 +25,10 @@ function fail(status: number, code: string, message: string, details?: unknown, 
 }
 
 /** Wraps a route handler: ApiError → proper envelope; anything else → generic 500 (details only in server logs). */
-export function handle(fn: (req: Request) => Promise<Response>) {
-  return async (req: Request): Promise<Response> => {
+export function handle<C = unknown>(fn: (req: Request, ctx: C) => Promise<Response>) {
+  return async (req: Request, ctx: C): Promise<Response> => {
     try {
-      return await fn(req);
+      return await fn(req, ctx);
     } catch (err) {
       if (err instanceof ApiError) {
         const headers = err.code === "RATE_LIMITED" && typeof err.details === "number" ? { "Retry-After": String(err.details) } : undefined;

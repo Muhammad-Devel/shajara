@@ -13,7 +13,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@shajara/auth": "*",
-    "@shajara/database": "*"
+    "@shajara/database": "*",
+    "@shajara/access": "*",
+    "@shajara/genealogy": "*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

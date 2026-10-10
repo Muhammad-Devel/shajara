@@ -53,6 +53,11 @@ export function validateParentChild(
     );
   }
 
+  return validateParentChildDates(parent, child);
+}
+
+/** Date consistency of one parent→child link. Only flags contradictions that are certain despite partial dates. */
+export function validateParentChildDates(parent: PersonLite, child: PersonLite): ValidationResult {
   // Only flag when certain regardless of date precision: parent's earliest possible birth
   // is not before the child's latest possible birth.
   const parentBirthEarliest = parsePartialDate(parent.birthDate);
