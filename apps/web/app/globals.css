@@ -133,3 +133,10 @@ a { color: inherit; }
 .detail dt { color: var(--color-ink-muted); }
 .detail dd { margin: 0; }
 .centered-card { display: grid; gap: var(--space-4); justify-items: center; text-align: center; }
+
+/* ---- members & invitations ---- */
+.row-actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; justify-content: flex-end; }
+.row-actions select { min-height: 36px; padding: 0 var(--space-2); font: inherit; color: var(--color-ink); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.invite-result { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+.invite-result input { min-height: 44px; padding: 0 var(--space-3); font: inherit; color: var(--color-ink); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); width: 100%; }
+.invite-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

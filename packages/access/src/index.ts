@@ -54,3 +54,41 @@ export function canViewPerson(args: {
   if (role === "OWNER" || role === "ADMIN") return true;
   return createdById !== null && createdById === userId;
 }
+
+// ---- membership & invitations ----
+
+export const INVITATION_TTL_DAYS = 7;
+export const MAX_MEMBERS_PER_FAMILY = 50;
+export const MAX_PENDING_INVITATIONS = 50;
+/** Roles that can be given through an invitation (OWNER is never granted). */
+export const INVITABLE_ROLES = ["VIEWER", "CONTRIBUTOR", "EDITOR", "ADMIN"] as const;
+
+/** May `actor` hand out `newRole` (invitation or role change)? Only the OWNER can create ADMINs. */
+export function canGrantRole(actor: FamilyRole, newRole: FamilyRole): boolean {
+  if (!can(actor, "member:manage")) return false;
+  if (newRole === "OWNER") return false;
+  if (newRole === "ADMIN") return actor === "OWNER";
+  return true;
+}
+
+/** May `actor` change an existing member (currently `target`) to `newRole`? The OWNER's role never changes. */
+export function canChangeRole(actor: FamilyRole, target: FamilyRole, newRole: FamilyRole): boolean {
+  if (!canGrantRole(actor, newRole)) return false;
+  if (target === "OWNER") return false;
+  if (target === "ADMIN") return actor === "OWNER";
+  return true;
+}
+
+/** Anyone may leave; admins remove people below them; only the OWNER removes admins; the OWNER cannot be removed. */
+export function canRemoveMember(args: { actor: FamilyRole; actorId: string; target: FamilyRole; targetId: string }): boolean {
+  const { actor, actorId, target, targetId } = args;
+  if (target === "OWNER") return false;
+  if (actorId === targetId) return true;
+  if (!can(actor, "member:manage")) return false;
+  if (target === "ADMIN") return actor === "OWNER";
+  return true;
+}
+
+export function invitationUsable(inv: { status: string; expiresAt: Date }, now: Date): boolean {
+  return inv.status === "PENDING" && inv.expiresAt.getTime() > now.getTime();
+}

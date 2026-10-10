@@ -418,6 +418,7 @@ model Invitation {
   familyId    String
   invitedById String
   email       String?
+  personId    String? // optional: the tree person this invitee will be linked to on accept
   tokenHash   String           @unique
   role        FamilyRole       @default(VIEWER)
   status      InvitationStatus @default(PENDING)

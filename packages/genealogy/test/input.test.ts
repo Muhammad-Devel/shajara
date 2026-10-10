@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  parseFamilyInput, parseMarriageInput, parseParentChildInput, parsePersonInput, parsePersonPatch,
+  parseFamilyInput, parseInvitationInput, parseMarriageInput, parseParentChildInput, parsePersonInput, parsePersonPatch,
   validateParentChildDates,
 } from "../src/index.ts";
 
@@ -94,5 +94,23 @@ describe("validateParentChildDates (reused when editing dates)", () => {
   });
   it("accepts consistent dates", () => {
     assert.equal(validateParentChildDates({ id: "p", birthDate: "1960" }, { id: "c", birthDate: "1990" }).ok, true);
+  });
+});
+
+describe("parseInvitationInput", () => {
+  it("accepts a role with optional email and person", () => {
+    const r = parseInvitationInput({ role: "EDITOR", email: "  Ali@Example.COM ", personId: "abc" });
+    assert.ok(r.ok);
+    assert.deepEqual(r.value, { role: "EDITOR", email: "ali@example.com", personId: "abc" });
+    const bare = parseInvitationInput({ role: "VIEWER", email: "", personId: "" });
+    assert.ok(bare.ok);
+    assert.deepEqual(bare.value, { role: "VIEWER", email: null, personId: null });
+  });
+  it("rejects OWNER and unknown roles, bad emails", () => {
+    const a = parseInvitationInput({ role: "OWNER" });
+    assert.ok(!a.ok && a.errors.role === "ROLE_INVALID");
+    const b = parseInvitationInput({ role: "VIEWER", email: "nope" });
+    assert.ok(!b.ok && b.errors.email === "EMAIL_INVALID");
+    assert.equal(parseInvitationInput(null).ok, false);
   });
 });

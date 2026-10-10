@@ -23,3 +23,9 @@ Known limit: no email provider yet, so verification and password-reset emails ar
 1. Create an account at resend.com → API Keys → create a key.
 2. Vercel env vars: `RESEND_API_KEY`, optionally `EMAIL_FROM` (default `SHAJARA <onboarding@resend.dev>`). Redeploy.
 3. Without a verified domain, Resend only delivers to the email address of your own Resend account. To email any user, verify a domain in Resend and set `EMAIL_FROM` to an address on it.
+
+## Phase 10 — invitations (DATABASE MIGRATION REQUIRED)
+`Invitation.personId` was added. **Before merging to `main`:**
+1. `DATABASE_URL="<url>" npx prisma migrate dev --name invitation_person --schema packages/database/prisma/schema.prisma` (creates a migration), commit `packages/database/prisma/migrations/`.
+2. Apply it to production: `DATABASE_URL="<prod url>" npm run deploy -w @shajara/database`.
+3. Then push/merge; otherwise the new code fails on the missing column.

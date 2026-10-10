@@ -19,6 +19,12 @@ const MESSAGES: Record<string, string> = {
   INTERNAL_ERROR: "Xatolik yuz berdi. Keyinroq urinib ko‘ring.",
 };
 
+/** Only same-site paths are allowed as a post-login destination (prevents open redirects). */
+function safeNext(next?: string): string {
+  return next && next.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/dashboard";
+}
+const nextQuery = (dest: string) => (dest === "/dashboard" ? "" : `?next=${encodeURIComponent(dest)}`);
+
 type Result = { ok: true } | { ok: false; message: string; fields: Record<string, string> };
 
 async function post(path: string, body: unknown): Promise<Result> {
@@ -98,10 +104,11 @@ function useForm(path: string, onSuccess: () => void) {
 const Status = ({ message }: { message: string }) =>
   message ? <p className="form-error" role="alert">{message}</p> : null;
 
-export function LoginForm() {
-  const form = useForm("auth/login", () => window.location.assign("/dashboard"));
+export function LoginForm({ next }: { next?: string }) {
+  const dest = safeNext(next);
+  const form = useForm("auth/login", () => window.location.assign(dest));
   return (
-    <Shell title="Kirish" footer={<>Akkauntingiz yo‘qmi? <Link href="/register">Ro‘yxatdan o‘ting</Link></>}>
+    <Shell title="Kirish" footer={<>Akkauntingiz yo‘qmi? <Link href={`/register${nextQuery(dest)}`}>Ro‘yxatdan o‘ting</Link></>}>
       <form className="form" onSubmit={form.submit} noValidate>
         <Status message={form.message} />
         <Field id="email" label="Email" type="email" autoComplete="email" error={form.fields.email} />
@@ -113,10 +120,11 @@ export function LoginForm() {
   );
 }
 
-export function RegisterForm() {
-  const form = useForm("auth/register", () => window.location.assign("/dashboard"));
+export function RegisterForm({ next }: { next?: string }) {
+  const dest = safeNext(next);
+  const form = useForm("auth/register", () => window.location.assign(dest));
   return (
-    <Shell title="Ro‘yxatdan o‘tish" footer={<>Akkauntingiz bormi? <Link href="/login">Kirish</Link></>}>
+    <Shell title="Ro‘yxatdan o‘tish" footer={<>Akkauntingiz bormi? <Link href={`/login${nextQuery(dest)}`}>Kirish</Link></>}>
       <form className="form" onSubmit={form.submit} noValidate>
         <Status message={form.message} />
         <Field id="firstName" label="Ism" autoComplete="given-name" error={form.fields.firstName} />

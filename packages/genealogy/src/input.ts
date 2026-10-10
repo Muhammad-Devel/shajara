@@ -157,3 +157,31 @@ export function parseMarriageInput(input: unknown): ParsedInput<MarriageInput> {
   }
   return result(errors, { personAId, personBId, status, startDate, endDate });
 }
+
+export const INVITE_ROLES = ["VIEWER", "CONTRIBUTOR", "EDITOR", "ADMIN"] as const;
+export type InviteRole = (typeof INVITE_ROLES)[number];
+export interface InvitationInput { role: InviteRole; email: string | null; personId: string | null }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+export function parseInvitationInput(input: unknown): ParsedInput<InvitationInput> {
+  if (!isObject(input)) return BAD_BODY;
+  const errors: FieldErrors = {};
+  let role: InviteRole = "VIEWER";
+  if (oneOf(INVITE_ROLES, input.role)) role = input.role;
+  else errors.role = "ROLE_INVALID";
+
+  let email: string | null = null;
+  if (present(input.email)) {
+    const e = input.email.trim().toLowerCase();
+    if (e.length > 254 || !EMAIL_RE.test(e)) errors.email = "EMAIL_INVALID";
+    else email = e;
+  }
+  let personId: string | null = null;
+  if (present(input.personId)) {
+    const id = input.personId.trim();
+    if (id.length > ID_MAX) errors.personId = "ID_INVALID";
+    else personId = id;
+  }
+  return result(errors, { role, email, personId });
+}
