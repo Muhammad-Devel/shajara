@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { LogoutButton } from "@/components/auth/AuthForms";
+import { LogoutButton, ResendVerification } from "@/components/auth/AuthForms";
 import { getCurrentSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Bosh panel", robots: { index: false } };
@@ -21,7 +21,10 @@ export default async function DashboardPage() {
         <h1>Salom, {user.profile?.firstName ?? "mehmon"}!</h1>
         <p className="lead">Shajarangizni yaratish tez orada shu yerda boshlanadi.</p>
         {user.emailVerified ? null : (
-          <p className="notice">Emailingiz hali tasdiqlanmagan. Pochtangizdagi havolani tekshiring.</p>
+          <div className="form">
+            <p className="notice">Emailingiz hali tasdiqlanmagan. Pochtangizdagi havolani tekshiring.</p>
+            <ResendVerification />
+          </div>
         )}
       </section>
     </main>

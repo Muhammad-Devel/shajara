@@ -197,3 +197,23 @@ export function LogoutButton() {
   }
   return <button className="btn btn-secondary" onClick={logout} disabled={pending}>Chiqish</button>;
 }
+
+export function ResendVerification() {
+  const [state, setState] = useState<"idle" | "loading" | "sent" | "error">("idle");
+  async function resend() {
+    setState("loading");
+    const result = await post("auth/resend-verification", {});
+    setState(result.ok ? "sent" : "error");
+  }
+  if (state === "sent") {
+    return <p role="status">Havola yuborildi. Pochtangizni tekshiring (Spam papkasini ham).</p>;
+  }
+  return (
+    <div className="form">
+      {state === "error" ? <p className="form-error" role="alert">Yuborib bo‘lmadi. Keyinroq urinib ko‘ring.</p> : null}
+      <button type="button" className="btn btn-secondary" onClick={resend} disabled={state === "loading"}>
+        {state === "loading" ? "Kutilmoqda…" : "Havolani qayta yuborish"}
+      </button>
+    </div>
+  );
+}

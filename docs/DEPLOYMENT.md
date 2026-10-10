@@ -18,3 +18,8 @@ Never commit `.env*` files (except `.env.example`).
 6. Check: register → dashboard → logout → login; `/api/v1/me` returns 401 when logged out.
 
 Known limit: no email provider yet, so verification and password-reset emails are NOT delivered in production (Phase 4b).
+
+## Phase 4b — email (Resend)
+1. Create an account at resend.com → API Keys → create a key.
+2. Vercel env vars: `RESEND_API_KEY`, optionally `EMAIL_FROM` (default `SHAJARA <onboarding@resend.dev>`). Redeploy.
+3. Without a verified domain, Resend only delivers to the email address of your own Resend account. To email any user, verify a domain in Resend and set `EMAIL_FROM` to an address on it.
